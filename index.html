@@ -3,276 +3,392 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rep Signup — Approval Queue MVP</title>
+<title>Trip QR Enrollment — MVP</title>
 <style>
   :root{
-    --ink:#121417; --muted:#6b7280; --line:#e4e6ea; --bg:#f6f7f9;
-    --accent:#1d4ed8; --accent-soft:#eef2ff; --ok:#047857; --ok-soft:#ecfdf5;
-    --warn:#b54708; --warn-soft:#fffaeb; --bad:#b42318; --bad-soft:#fef3f2;
+    --ink:#121417;--muted:#6b7280;--faint:#9aa1ab;--line:#e4e6ea;--bg:#f6f7f9;
+    --accent:#1d4ed8;--accent-soft:#eef2ff;
+    --ok:#047857;--ok-soft:#ecfdf5;--warn:#b54708;--warn-soft:#fffaeb;
+    --bad:#b42318;--bad-soft:#fef3f2;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);
     font:15px/1.5 ui-sans-serif,-apple-system,"Segoe UI",Inter,sans-serif;
-    -webkit-font-smoothing:antialiased;padding:28px 20px 48px}
-  .wrap{max-width:1080px;margin:0 auto}
-  h2{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
-    margin:0 0 14px;font-weight:600}
-  h2 .aside{text-transform:none;letter-spacing:0;font-weight:500;color:#9aa1ab;margin-left:8px}
+    -webkit-font-smoothing:antialiased;padding:26px 20px 46px}
+  .wrap{max-width:1180px;margin:0 auto}
+  h2{font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+    margin:0 0 13px;font-weight:650}
+  h2 .aside{text-transform:none;letter-spacing:0;font-weight:500;color:var(--faint);margin-left:8px}
 
-  /* journey */
-  .journey{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:34px}
-  .step{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
-  .step .n{width:20px;height:20px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+  /* journey strip */
+  .journey{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:32px}
+  .st{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
+  .st .n{width:20px;height:20px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
     font-size:11px;font-weight:700;display:grid;place-items:center;margin-bottom:9px}
-  .step.gate .n{background:var(--warn-soft);color:var(--warn)}
-  .step h3{margin:0 0 4px;font-size:13.5px;font-weight:650}
-  .step p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.45}
-  .step .tag{display:inline-block;margin-top:9px;font-size:10.5px;font-weight:600;
-    letter-spacing:.04em;text-transform:uppercase;padding:2.5px 7px;border-radius:5px;
-    background:#f2f3f5;color:var(--muted)}
-  .step.gate .tag{background:var(--warn-soft);color:var(--warn)}
+  .st.gate .n{background:var(--warn-soft);color:var(--warn)}
+  .st h3{margin:0 0 4px;font-size:13.5px;font-weight:650}
+  .st p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.45}
+  .st .tag{display:inline-block;margin-top:9px;font-size:10px;font-weight:650;letter-spacing:.05em;
+    text-transform:uppercase;padding:2.5px 7px;border-radius:5px;background:#f2f3f5;color:var(--muted)}
+  .st.gate .tag{background:var(--warn-soft);color:var(--warn)}
 
-  .stage{display:grid;grid-template-columns:378px 1fr;gap:28px;align-items:start}
+  .stage{display:grid;grid-template-columns:1fr 352px;gap:24px;align-items:start}
+  .lcol{display:grid;grid-template-columns:1fr;gap:20px}
 
-  /* device */
-  .phone{background:#fff;border:1px solid var(--line);border-radius:22px;
-    padding:26px 24px 30px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 12px 32px -12px rgba(16,24,40,.14)}
-  .brand{font-size:13px;font-weight:700;letter-spacing:-.01em;margin-bottom:22px}
-  .brand span{color:var(--accent)}
-  .phone h1{font-size:21px;line-height:1.25;margin:0 0 6px;letter-spacing:-.02em}
-  .sub{font-size:13px;color:var(--muted);margin:0 0 20px}
-  label{display:block;font-size:12px;font-weight:600;margin:0 0 5px}
-  .field{margin-bottom:13px}
-  input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;
-    font-size:14px;font-family:inherit;background:#fff;color:var(--ink)}
-  input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-  .hint{font-size:11.5px;color:var(--muted);margin-top:5px}
-  button{width:100%;padding:11px;border:0;border-radius:9px;background:var(--accent);color:#fff;
-    font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:7px}
-  button:hover{background:#1a43c0}
-  .link{background:none;color:var(--muted);font-weight:500;font-size:12.5px;margin-top:9px;padding:4px}
-  .link:hover{background:none;color:var(--ink)}
-  .msg{padding:10px 12px;border-radius:9px;font-size:12.5px;margin-bottom:14px}
-  .msg.bad{background:var(--bad-soft);color:var(--bad)}
-  .screens{display:none}.screens.on{display:block}
+  /* projector card */
+  .proj{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;
+    box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .proj .top{padding:13px 18px;border-bottom:1px solid var(--line);display:flex;
+    justify-content:space-between;align-items:center;background:#fafbfc}
+  .proj .top .ttl{font-size:12px;font-weight:650;color:var(--muted)}
+  .clock{font-variant-numeric:tabular-nums;font-size:12px;font-weight:650;
+    padding:3px 9px;border-radius:20px;background:var(--ok-soft);color:var(--ok)}
+  .clock.low{background:var(--warn-soft);color:var(--warn)}
+  .clock.off{background:var(--bad-soft);color:var(--bad)}
+  .proj .body{padding:24px 26px;display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center}
+  .qrbox{width:188px;height:188px;border:1px solid var(--line);border-radius:12px;padding:13px;
+    background:#fff;cursor:pointer;transition:transform .12s,box-shadow .12s;position:relative}
+  .qrbox:hover{transform:translateY(-2px);box-shadow:0 8px 24px -8px rgba(16,24,40,.22)}
+  .qrbox svg{width:100%;height:100%;display:block;shape-rendering:crispEdges}
+  .qrbox.dead{opacity:.16;pointer-events:none;filter:grayscale(1)}
+  .qrhint{position:absolute;bottom:-21px;left:0;right:0;text-align:center;
+    font-size:10.5px;color:var(--faint)}
+  .proj h1{margin:0 0 5px;font-size:23px;letter-spacing:-.025em}
+  .proj .trip{font-size:12.5px;color:var(--muted);margin:0 0 16px}
+  .proj .trip b{color:var(--ink);font-weight:650;font-variant-numeric:tabular-nums}
+  .meter{height:7px;border-radius:20px;background:#eef0f2;overflow:hidden;margin-bottom:8px}
+  .meter i{display:block;height:100%;background:var(--accent);width:0;transition:width .4s}
+  .meter.full i{background:var(--bad)}
+  .mstat{font-size:12px;color:var(--muted)}
+  .mstat b{color:var(--ink);font-weight:650;font-variant-numeric:tabular-nums}
+  .closed{margin-top:14px;padding:10px 13px;border-radius:9px;background:var(--bad-soft);
+    color:var(--bad);font-size:12.5px;display:none}
+  .closed.on{display:block}
 
-  /* pending state */
-  .pend{text-align:center;padding:10px 0 0}
-  .pend .ic{width:46px;height:46px;border-radius:50%;background:var(--warn-soft);color:var(--warn);
-    display:grid;place-items:center;font-size:21px;margin:0 auto 14px}
-  .pend .ic.ok{background:var(--ok-soft);color:var(--ok)}
-  .locked{text-align:left;margin-top:18px;border:1px solid var(--line);border-radius:11px;overflow:hidden}
-  .locked .hd{background:#fafbfc;padding:9px 13px;font-size:11px;font-weight:650;
-    letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
-  .locked .li{display:flex;justify-content:space-between;align-items:center;
-    padding:10px 13px;font-size:12.5px;border-bottom:1px solid var(--line)}
-  .locked .li:last-child{border:0}
-  .locked .li .nm{color:var(--muted)}
-  .locked .li.on .nm{color:var(--ink)}
-  .pill{font-size:10.5px;font-weight:650;padding:2.5px 8px;border-radius:20px;
-    background:#f2f3f5;color:var(--muted)}
-  .pill.on{background:var(--ok-soft);color:var(--ok)}
-
-  /* queue */
+  /* dashboard */
   .panel{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
-  .panel .ph{padding:15px 18px;border-bottom:1px solid var(--line);display:flex;
+  .panel .ph{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;
     justify-content:space-between;align-items:center}
   .panel .ph h4{margin:0;font-size:13.5px;font-weight:650}
-  .panel .ph .ct{font-size:11.5px;color:var(--muted)}
-  .q{padding:14px 18px;border-bottom:1px solid var(--line);display:grid;
-    grid-template-columns:1fr auto;gap:12px;align-items:center}
-  .q:last-child{border:0}
-  .q .who{font-size:13.5px;font-weight:600;margin-bottom:2px}
-  .q .meta{font-size:12px;color:var(--muted);line-height:1.5}
-  .q .meta b{color:var(--ink);font-weight:600}
-  .flag{display:inline-block;margin-top:6px;font-size:10.5px;font-weight:650;
-    padding:2.5px 7px;border-radius:5px;background:var(--bad-soft);color:var(--bad)}
-  .flag.soft{background:var(--warn-soft);color:var(--warn)}
-  .acts{display:flex;gap:7px}
-  .acts button{width:auto;margin:0;padding:7px 13px;font-size:12.5px;border-radius:7px}
-  .acts .dn{background:#fff;border:1px solid var(--line);color:var(--muted)}
-  .acts .dn:hover{background:#fafbfc;color:var(--bad);border-color:#f3c9c4}
-  .resolved{padding:14px 18px;font-size:12.5px;color:var(--muted)}
-  .resolved span{font-weight:600}
-  .resolved span.a{color:var(--ok)} .resolved span.d{color:var(--bad)}
+  .panel .ph .who{font-size:11.5px;color:var(--muted)}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line)}
+  .kpi{padding:13px 16px;border-right:1px solid var(--line)}
+  .kpi:last-child{border-right:0}
+  .kpi .k{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--faint);margin-bottom:4px}
+  .kpi .v{font-size:19px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .kpi .v.w{color:var(--warn)} .kpi .v.g{color:var(--ok)}
+  .rows{max-height:244px;overflow-y:auto}
+  .rw{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;
+    padding:10px 18px;border-bottom:1px solid var(--line);font-size:12.5px}
+  .rw:last-child{border:0}
+  .rw .nm{font-weight:600}
+  .rw .mt{font-size:11.5px;color:var(--muted)}
+  .rw .mt b{color:var(--ink);font-weight:600}
+  .chip{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap}
+  .chip.p{background:var(--warn-soft);color:var(--warn)}
+  .chip.a{background:var(--ok-soft);color:var(--ok)}
+  .chip.f{background:var(--bad-soft);color:var(--bad)}
+  .empty{padding:26px 18px;text-align:center;font-size:12.5px;color:var(--faint)}
+  .pfoot{padding:14px 18px;border-top:1px solid var(--line);background:#fafbfc;
+    display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .pfoot .note{font-size:11.5px;color:var(--muted);line-height:1.45}
+  button{border:0;border-radius:8px;background:var(--accent);color:#fff;font-size:12.5px;
+    font-weight:600;font-family:inherit;padding:9px 15px;cursor:pointer;white-space:nowrap}
+  button:hover{background:#1a43c0}
+  button:disabled{background:#e9ebee;color:var(--faint);cursor:default}
 
-  .notes{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-top:18px}
-  .notes .row{padding:13px 0;border-bottom:1px solid var(--line)}
-  .notes .row:first-child{padding-top:0} .notes .row:last-child{border:0;padding-bottom:0}
-  .notes h4{margin:0 0 3px;font-size:13px;font-weight:650}
-  .notes p{margin:0;font-size:12.5px;color:var(--muted)}
-  @media(max-width:900px){.stage{grid-template-columns:1fr}.journey{grid-template-columns:1fr 1fr}}
+  /* phone */
+  .phone{background:#fff;border:1px solid var(--line);border-radius:22px;padding:24px 22px 28px;
+    box-shadow:0 1px 2px rgba(16,24,40,.04),0 12px 32px -12px rgba(16,24,40,.14);
+    position:sticky;top:20px}
+  .brand{font-size:12.5px;font-weight:700;letter-spacing:-.01em;margin-bottom:18px}
+  .brand span{color:var(--accent)}
+  .phone h1{font-size:20px;line-height:1.25;margin:0 0 5px;letter-spacing:-.02em}
+  .sub{font-size:12.5px;color:var(--muted);margin:0 0 17px}
+  label{display:block;font-size:11.5px;font-weight:600;margin:0 0 5px}
+  .field{margin-bottom:11px}
+  input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;
+    font-size:13.5px;font-family:inherit;background:#fff;color:var(--ink)}
+  input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .locked-in{background:#f6f7f9;color:var(--muted);display:flex;justify-content:space-between;
+    align-items:center;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:13.5px}
+  .locked-in b{color:var(--ink);font-weight:650;letter-spacing:.02em}
+  .locked-in .lk{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--ok);background:var(--ok-soft);padding:2.5px 7px;border-radius:5px}
+  .phone button{width:100%;padding:11px;font-size:14px;margin-top:6px}
+  .link{background:none;color:var(--muted);font-weight:500;font-size:12px;margin-top:8px;padding:4px}
+  .link:hover{background:none;color:var(--ink)}
+  .scan{text-align:center;padding:28px 6px}
+  .scan .ic{width:46px;height:46px;border-radius:12px;background:var(--accent-soft);color:var(--accent);
+    display:grid;place-items:center;font-size:21px;margin:0 auto 14px}
+  .pend .ic{width:44px;height:44px;border-radius:50%;background:var(--warn-soft);color:var(--warn);
+    display:grid;place-items:center;font-size:20px;margin:0 auto 13px}
+  .pend .ic.ok{background:var(--ok-soft);color:var(--ok)}
+  .pend{text-align:center;padding:8px 0 0}
+  .acct{text-align:left;margin-top:16px;border:1px solid var(--line);border-radius:11px;overflow:hidden}
+  .acct .hd{background:#fafbfc;padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--line)}
+  .acct .li{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;
+    font-size:12.5px;border-bottom:1px solid var(--line);color:var(--muted)}
+  .acct .li:last-child{border:0}
+  .acct .li.on{color:var(--ink)}
+  .screens{display:none}.screens.on{display:block}
+  .msg{padding:9px 11px;border-radius:9px;font-size:12px;margin-bottom:12px}
+  .msg.bad{background:var(--bad-soft);color:var(--bad)}
+
+  .notes{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:20px}
+  .notes .row{padding:12px 0;border-bottom:1px solid var(--line)}
+  .notes .row:first-child{padding-top:0}.notes .row:last-child{border:0;padding-bottom:0}
+  .notes h4{margin:0 0 3px;font-size:12.5px;font-weight:650}
+  .notes p{margin:0;font-size:12px;color:var(--muted)}
+  @media(max-width:980px){.stage{grid-template-columns:1fr}.journey{grid-template-columns:1fr 1fr}
+    .proj .body{grid-template-columns:1fr;justify-items:center;text-align:center}
+    .phone{position:static}}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <h2>User journey <span class="aside">no roster required — an approver absorbs verification</span></h2>
+  <h2>User journey <span class="aside">one trip-scoped code, delivered by QR, capped and time-boxed</span></h2>
   <div class="journey">
-    <div class="step">
-      <div class="n">1</div><h3>Receive</h3>
-      <p>Rep gets the shared promo code from a manager or onboarding deck.</p>
-      <span class="tag">Shareable</span>
-    </div>
-    <div class="step">
-      <div class="n">2</div><h3>Enter</h3>
-      <p>Signs up with any email, and names their manager and office as claims.</p>
-      <span class="tag">One screen</span>
-    </div>
-    <div class="step gate">
-      <div class="n">3</div><h3>Hold</h3>
-      <p>Account is created but restricted. No credits, no sponsored benefits, nothing of value.</p>
-      <span class="tag">The gate</span>
-    </div>
-    <div class="step">
-      <div class="n">4</div><h3>Review</h3>
-      <p>Nico or Justin clears the queue once a day, checking claims against what they know.</p>
-      <span class="tag">~1 min each</span>
-    </div>
-    <div class="step">
-      <div class="n">5</div><h3>Activate</h3>
-      <p>Approved reps get an email and full benefits switch on. Denials just expire.</p>
-      <span class="tag">Reversible</span>
-    </div>
+    <div class="st"><div class="n">1</div><h3>Request</h3>
+      <p>Account Management requests a code for the trip. Cap and expiry are set at creation.</p>
+      <span class="tag">Before the trip</span></div>
+    <div class="st"><div class="n">2</div><h3>Display</h3>
+      <p>QR goes on screen at the end of the sales meeting. No codes typed, no codes handed out.</p>
+      <span class="tag">In the room</span></div>
+    <div class="st gate"><div class="n">3</div><h3>Scan</h3>
+      <p>Code arrives pre-filled. Enrollment is capped, time-boxed, and closes on its own.</p>
+      <span class="tag">The gate</span></div>
+    <div class="st"><div class="n">4</div><h3>Enroll</h3>
+      <p>Rep finishes in about thirty seconds and leaves for their tour. Benefits start held.</p>
+      <span class="tag">~30 sec</span></div>
+    <div class="st"><div class="n">5</div><h3>Confirm</h3>
+      <p>After the trip, Nico or Justin approves the batch against expected headcount.</p>
+      <span class="tag">~1 min / trip</span></div>
   </div>
 
-  <h2>The pages</h2>
+  <h2>The experience</h2>
   <div class="stage">
+    <div class="lcol">
+
+      <div class="proj">
+        <div class="top">
+          <span class="ttl">On the room screen · end of morning meeting</span>
+          <span class="clock" id="clock">Closes in 1:59:40</span>
+        </div>
+        <div class="body">
+          <div class="qrbox" id="qrbox" onclick="scan()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" class="segno"><path class="qrline" stroke="#121417" d="M0 0.5h7m4 0h2m2 0h1m1 0h4m2 0h2m1 0h7m-33 1h1m5 0h1m1 0h1m1 0h1m2 0h1m1 0h5m1 0h4m1 0h1m5 0h1m-33 1h1m1 0h3m1 0h1m2 0h1m1 0h1m2 0h1m4 0h2m1 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m2 0h3m1 0h1m5 0h1m2 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m1 0h1m1 0h3m1 0h1m1 0h2m1 0h2m2 0h1m2 0h1m1 0h3m1 0h1m-33 1h1m5 0h1m2 0h1m1 0h1m3 0h2m1 0h2m1 0h4m1 0h1m5 0h1m-33 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-24 1h1m3 0h5m1 0h1m1 0h1m2 0h1m-25 1h1m1 0h1m1 0h1m1 0h1m4 0h3m1 0h3m1 0h5m4 0h1m2 0h1m-32 1h1m1 0h1m2 0h1m1 0h1m1 0h3m5 0h1m2 0h2m3 0h3m4 0h1m-32 1h8m1 0h2m1 0h1m2 0h1m1 0h1m2 0h2m1 0h1m1 0h2m2 0h3m-32 1h5m2 0h2m1 0h2m2 0h1m1 0h5m3 0h1m2 0h1m2 0h2m-33 1h1m1 0h1m1 0h1m1 0h1m1 0h3m5 0h3m2 0h1m1 0h1m2 0h2m1 0h1m1 0h1m-30 1h1m2 0h1m5 0h3m1 0h2m1 0h3m4 0h2m5 0h1m-31 1h5m2 0h1m1 0h4m3 0h1m1 0h2m3 0h1m3 0h4m-33 1h2m2 0h1m2 0h1m1 0h3m1 0h3m1 0h3m1 0h1m2 0h1m1 0h1m4 0h1m-31 1h1m1 0h2m1 0h2m1 0h3m1 0h1m3 0h1m1 0h1m1 0h1m1 0h1m1 0h2m2 0h1m-30 1h1m3 0h2m2 0h1m3 0h1m3 0h2m2 0h1m3 0h1m1 0h2m3 0h2m-31 1h3m1 0h2m1 0h2m7 0h1m1 0h1m1 0h1m1 0h2m4 0h3m-33 1h1m1 0h4m1 0h1m2 0h1m1 0h1m2 0h3m1 0h1m1 0h4m1 0h3m3 0h1m-30 1h1m1 0h3m5 0h2m1 0h6m2 0h4m1 0h1m1 0h2m-24 1h3m1 0h4m1 0h5m3 0h1m2 0h1m1 0h2m-33 1h1m1 0h1m3 0h2m1 0h1m1 0h4m2 0h1m2 0h2m2 0h5m1 0h3m-32 1h2m1 0h1m2 0h3m2 0h2m1 0h5m1 0h2m2 0h1m2 0h2m1 0h1m-32 1h1m2 0h4m2 0h1m3 0h1m1 0h4m1 0h2m2 0h5m2 0h1m-24 1h1m2 0h1m2 0h1m1 0h2m2 0h2m2 0h1m3 0h2m1 0h2m-33 1h7m2 0h1m1 0h1m1 0h2m1 0h1m1 0h1m1 0h1m1 0h3m1 0h1m1 0h1m1 0h3m-33 1h1m5 0h1m2 0h3m1 0h2m2 0h5m2 0h1m3 0h1m-29 1h1m1 0h3m1 0h1m1 0h3m1 0h1m3 0h3m2 0h2m1 0h6m-30 1h1m1 0h3m1 0h1m6 0h1m4 0h3m1 0h1m5 0h1m1 0h1m1 0h1m-33 1h1m1 0h3m1 0h1m1 0h2m3 0h1m2 0h2m4 0h2m4 0h3m1 0h1m-33 1h1m5 0h1m3 0h3m1 0h9m1 0h2m2 0h1m2 0h1m-32 1h7m1 0h1m2 0h1m1 0h1m3 0h1m1 0h1m1 0h1m1 0h4m1 0h1m2 0h2"/></svg>
+            <div class="qrhint">Click to simulate a scan</div>
+          </div>
+          <div>
+            <h1>Scan to join the employee store</h1>
+            <p class="trip">Phoenix · Oct 14 AM tour group · Trip code <b>PHX-1014-AM</b></p>
+            <div class="meter" id="meter"><i id="bar"></i></div>
+            <div class="mstat"><b id="used">0</b> of <b>42</b> enrollments used · expected headcount 38</div>
+            <div class="closed" id="closedmsg">Enrollment closed for this trip. The code no longer works.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ph"><h4>Trip enrollment · PHX-1014-AM</h4><span class="who">Nico / Justin</span></div>
+        <div class="kpis">
+          <div class="kpi"><div class="k">Enrolled</div><div class="v" id="k1">0</div></div>
+          <div class="kpi"><div class="k">Expected</div><div class="v">38</div></div>
+          <div class="kpi"><div class="k">Over expected</div><div class="v" id="k3">0</div></div>
+          <div class="kpi"><div class="k">Window</div><div class="v g" id="k4">Open</div></div>
+        </div>
+        <div class="rows" id="rows"><div class="empty" id="empty">No enrollments yet — scan the QR to start.</div></div>
+        <div class="pfoot">
+          <div class="note" id="fnote">Benefits stay off until the batch is confirmed after the trip.</div>
+          <button id="batch" onclick="confirmBatch()" disabled>Confirm batch</button>
+        </div>
+      </div>
+
+      <div class="notes">
+        <div class="row"><h4>The code never travels</h4>
+          <p>Scoped to one trip and one meeting. A photographed QR is worthless by the afternoon.</p></div>
+        <div class="row"><h4>The cap is the real gate</h4>
+          <p>42 slots for 38 reps. People in the room scan first, so a forwarded link arrives to a spent code.</p></div>
+        <div class="row"><h4>Expiry is a clock, not a task</h4>
+          <p>Set when the code is created. Deactivation can't be forgotten on the trip where it matters.</p></div>
+        <div class="row"><h4>Review is per trip, not per rep</h4>
+          <p>One number checked against one expectation. Manager names only matter when the count is wrong.</p></div>
+        <div class="row"><h4>Still reversible</h4>
+          <p>Benefits are account state. Anything confirmed in error is downgraded after the fact.</p></div>
+      </div>
+    </div>
 
     <div class="phone">
-      <div class="brand">Vacation<span>Places</span> · Sales</div>
+      <div class="brand">Vacation<span>Places</span> · Employee Store</div>
 
-      <div class="screens on" id="s1">
-        <h1>Create your rep account</h1>
-        <p class="sub">Use any email. We'll confirm you're on the team before benefits turn on.</p>
-        <div id="err1"></div>
-        <div class="field"><label>Promo code</label><input id="code" value="SELL2026" autocomplete="off"></div>
+      <div class="screens on" id="s0">
+        <div class="scan">
+          <div class="ic">⌁</div>
+          <h1>Ready to scan</h1>
+          <p class="sub">Point the camera at the QR on the room screen. This phone shows what the rep sees.</p>
+        </div>
+      </div>
+
+      <div class="screens" id="s1">
+        <h1>You're joining the Phoenix store</h1>
+        <p class="sub">Code applied from the QR. Use any email — personal is fine.</p>
+        <div id="err"></div>
+        <div class="field"><label>Trip code</label>
+          <div class="locked-in"><b>PHX-1014-AM</b><span class="lk">Applied</span></div></div>
         <div class="field"><label>Full name</label><input id="nm" placeholder="Jordan Reyes"></div>
         <div class="field"><label>Email</label><input id="em" placeholder="jordan@gmail.com"></div>
-        <div class="field"><label>Your manager</label><input id="mg" placeholder="Dana Whitfield">
-          <div class="hint">They'll be asked to confirm you.</div></div>
-        <div class="field"><label>Office or team</label><input id="of" placeholder="Phoenix — Inside Sales"></div>
+        <div class="field"><label>Your manager</label><input id="mg" placeholder="Dana Whitfield"></div>
         <div class="field"><label>Password</label><input type="password" placeholder="••••••••"></div>
-        <button onclick="submitForm()">Create account</button>
+        <button onclick="enroll()">Join the store</button>
       </div>
 
       <div class="screens" id="s2">
         <div class="pend">
           <div class="ic">◷</div>
-          <h1>Account created</h1>
-          <p class="sub">You're pending confirmation from your manager. Most are cleared within a business day — we'll email you.</p>
+          <h1>You're enrolled</h1>
+          <p class="sub">Browse now — credits and your rate switch on once the trip is confirmed. Go catch your tour.</p>
         </div>
-        <div class="locked">
+        <div class="acct">
           <div class="hd">Your account</div>
-          <div class="li on"><span class="nm">Profile &amp; login</span><span class="pill on">Active</span></div>
-          <div class="li on"><span class="nm">Browse the marketplace</span><span class="pill on">Active</span></div>
-          <div class="li"><span class="nm">Travel credits</span><span class="pill">Pending</span></div>
-          <div class="li"><span class="nm">Sponsored rate</span><span class="pill">Pending</span></div>
-          <div class="li"><span class="nm">Booking</span><span class="pill">Pending</span></div>
+          <div class="li on"><span>Profile &amp; login</span><span class="chip a">Active</span></div>
+          <div class="li on"><span>Browse the store</span><span class="chip a">Active</span></div>
+          <div class="li"><span>Travel credits</span><span class="chip p">Pending</span></div>
+          <div class="li"><span>Employee rate</span><span class="chip p">Pending</span></div>
+          <div class="li"><span>Booking</span><span class="chip p">Pending</span></div>
         </div>
-        <button class="link" onclick="go('s1')">← Start the demo over</button>
+        <button class="link" onclick="reset()">← Reset the demo</button>
       </div>
 
       <div class="screens" id="s3">
         <div class="pend">
           <div class="ic ok">✓</div>
-          <h1>You're approved</h1>
-          <p class="sub">Dana confirmed you. Credits and your sponsored rate are live.</p>
+          <h1>Store unlocked</h1>
+          <p class="sub">The Phoenix trip was confirmed. Everything is live.</p>
         </div>
-        <div class="locked">
+        <div class="acct">
           <div class="hd">Your account</div>
-          <div class="li on"><span class="nm">Profile &amp; login</span><span class="pill on">Active</span></div>
-          <div class="li on"><span class="nm">Browse the marketplace</span><span class="pill on">Active</span></div>
-          <div class="li on"><span class="nm">Travel credits</span><span class="pill on">Active</span></div>
-          <div class="li on"><span class="nm">Sponsored rate</span><span class="pill on">Active</span></div>
-          <div class="li on"><span class="nm">Booking</span><span class="pill on">Active</span></div>
+          <div class="li on"><span>Profile &amp; login</span><span class="chip a">Active</span></div>
+          <div class="li on"><span>Browse the store</span><span class="chip a">Active</span></div>
+          <div class="li on"><span>Travel credits</span><span class="chip a">Active</span></div>
+          <div class="li on"><span>Employee rate</span><span class="chip a">Active</span></div>
+          <div class="li on"><span>Booking</span><span class="chip a">Active</span></div>
         </div>
-        <button class="link" onclick="go('s1')">← Start the demo over</button>
-      </div>
-    </div>
-
-    <div>
-      <div class="panel">
-        <div class="ph"><h4>Approval queue <span style="font-weight:500;color:#6b7280;font-size:12px">· Nico / Justin</span></h4><span class="ct" id="ct">3 pending</span></div>
-        <div id="queue">
-          <div class="q" data-id="q1">
-            <div>
-              <div class="who">Jordan Reyes</div>
-              <div class="meta">jordan.reyes@gmail.com · <b>Dana Whitfield</b> · Phoenix — Inside Sales<br>Today, 9:14 AM</div>
-            </div>
-            <div class="acts">
-              <button onclick="resolve('q1','a')">Approve</button>
-              <button class="dn" onclick="resolve('q1','d')">Deny</button>
-            </div>
-          </div>
-          <div class="q" data-id="q2">
-            <div>
-              <div class="who">Priya Raman</div>
-              <div class="meta">p.raman@outlook.com · <b>Marcus Hale</b> · Denver — Field<br>Today, 8:02 AM</div>
-            </div>
-            <div class="acts">
-              <button onclick="resolve('q2','a')">Approve</button>
-              <button class="dn" onclick="resolve('q2','d')">Deny</button>
-            </div>
-          </div>
-          <div class="q" data-id="q3">
-            <div>
-              <div class="who">Alex M.</div>
-              <div class="meta">dealhunter22@gmail.com · <b>(left blank)</b> · —<br>Today, 2:41 AM</div>
-              <span class="flag">No manager named</span>
-              <span class="flag soft">4th signup from this IP today</span>
-            </div>
-            <div class="acts">
-              <button onclick="resolve('q3','a')">Approve</button>
-              <button class="dn" onclick="resolve('q3','d')">Deny</button>
-            </div>
-          </div>
-        </div>
-        <div class="resolved" id="rs" style="display:none"></div>
+        <button class="link" onclick="reset()">← Reset the demo</button>
       </div>
 
-      <div class="notes">
-        <div class="row"><h4>The hold is the gate</h4>
-          <p>A leaked code buys an account that can't do anything. There's no value to steal before a human looks.</p></div>
-        <div class="row"><h4>Claims make review fast</h4>
-          <p>Manager and office aren't verified at entry — they're what Nico or Justin recognizes or doesn't in about a minute.</p></div>
-        <div class="row"><h4>Weak signals do the sorting</h4>
-          <p>Blank manager, odd hours, repeat IPs. Nothing blocks on its own, but it puts the right rows at the top.</p></div>
-        <div class="row"><h4>Denial is quiet</h4>
-          <p>Nothing is revoked or announced — the account simply never leaves restricted state and expires.</p></div>
-        <div class="row"><h4>This is a bridge</h4>
-          <p>When SSO or a roster lands, the gate swaps out and the queue empties. The restricted state stays useful.</p></div>
+      <div class="screens" id="s4">
+        <div class="scan">
+          <div class="ic" style="background:var(--bad-soft);color:var(--bad)">✕</div>
+          <h1>This code has closed</h1>
+          <p class="sub">Enrollment for the Phoenix Oct 14 trip is over. Ask your manager about the next session.</p>
+        </div>
+        <button class="link" onclick="reset()">← Reset the demo</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-  let pending = 3, log = [];
-  const go = id => {
-    document.querySelectorAll(".screens").forEach(e=>e.classList.remove("on"));
-    document.getElementById(id).classList.add("on");
-    document.getElementById("err1").innerHTML = "";
-  };
-  function submitForm(){
-    const nm = document.getElementById("nm").value.trim() || "Jordan Reyes";
-    if(!document.getElementById("code").value.trim()){
-      document.getElementById("err1").innerHTML =
-        '<div class="msg bad">Enter your promo code to continue.</div>'; return;
-    }
+  const CAP = 42, EXPECTED = 38;
+  const NAMES = [
+    ["Priya Raman","p.raman@outlook.com","Dana Whitfield"],
+    ["Marcus Hale","mhale@gmail.com","Dana Whitfield"],
+    ["Tasha Owens","t.owens@icloud.com","Luis Ferrer"],
+    ["Ben Okafor","bokafor@gmail.com","Dana Whitfield"],
+    ["Sara Lindqvist","sara.l@yahoo.com","Luis Ferrer"]
+  ];
+  let used = 0, roster = [], closed = false, confirmed = false, left = 7180;
+
+  const $ = id => document.getElementById(id);
+  const go = id => { document.querySelectorAll(".screens").forEach(e=>e.classList.remove("on"));
+                     $(id).classList.add("on"); $("err").innerHTML=""; };
+
+  function fmt(s){ const h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60;
+    return h+":"+String(m).padStart(2,"0")+":"+String(x).padStart(2,"0"); }
+
+  setInterval(()=>{
+    if(closed) return;
+    left -= 20;
+    if(left <= 0){ left = 0; closeWindow("Window expired"); }
+    const c = $("clock");
+    c.textContent = "Closes in " + fmt(left);
+    c.className = "clock" + (left < 1800 ? " low" : "");
+  }, 1000);
+
+  function closeWindow(reason){
+    closed = true;
+    $("qrbox").classList.add("dead");
+    $("closedmsg").classList.add("on");
+    $("clock").textContent = reason; $("clock").className = "clock off";
+    $("k4").textContent = "Closed"; $("k4").className = "v";
+    $("batch").disabled = roster.length === 0 || confirmed;
+  }
+
+  function scan(){
+    if(closed){ go("s4"); return; }
+    go("s1");
+  }
+
+  function paint(){
+    used = roster.length;
+    $("used").textContent = used;
+    $("k1").textContent = used;
+    const over = Math.max(0, used - EXPECTED);
+    $("k3").textContent = over;
+    $("k3").className = "v" + (over > 0 ? " w" : "");
+    $("bar").style.width = (used / CAP * 100) + "%";
+    $("meter").className = "meter" + (used >= CAP ? " full" : "");
+    if(used) $("empty").style.display = "none";
+    $("batch").disabled = used === 0 || confirmed;
+    if(used >= CAP && !closed) closeWindow("Cap reached");
+  }
+
+  function addRow(name, email, mgr, isYou){
+    const d = document.createElement("div");
+    d.className = "rw";
+    const t = new Date(); t.setMinutes(t.getMinutes() - ((5 - roster.length) * 2));
+    d.innerHTML = '<div><div class="nm">'+name+(isYou?' <span style="color:var(--faint);font-weight:500">· you</span>':'')+
+      '</div><div class="mt">'+email+' · <b>'+(mgr||'(no manager named)')+'</b> · '+
+      t.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"})+'</div></div>'+
+      '<span class="chip p">Held</span>';
+    $("rows").prepend(d);
+    roster.push({el:d, name});
+  }
+
+  function enroll(){
+    if(closed){ go("s4"); return; }
+    const nm = $("nm").value.trim() || "Jordan Reyes";
+    const em = $("em").value.trim() || "jordan@gmail.com";
+    const mg = $("mg").value.trim() || "Dana Whitfield";
+    addRow(nm, em, mg, true);
+    paint();
     go("s2");
+    // the rest of the room keeps scanning
+    let i = 0;
+    const fill = setInterval(()=>{
+      if(closed || i >= NAMES.length){ clearInterval(fill); return; }
+      const n = NAMES[i++];
+      addRow(n[0], n[1], n[2], false);
+      paint();
+    }, 1100);
   }
-  function resolve(id, verdict){
-    const row = document.querySelector('[data-id="'+id+'"]');
-    const who = row.querySelector(".who").textContent;
-    row.remove(); pending--;
-    document.getElementById("ct").textContent = pending + " pending";
-    log.unshift((verdict==="a"?'<span class="a">Approved</span> ':'<span class="d">Denied</span> ') + who);
-    const rs = document.getElementById("rs");
-    rs.style.display = "block";
-    rs.innerHTML = log.join(" · ");
-    if(id === "q1" && verdict === "a" && document.getElementById("s2").classList.contains("on")) go("s3");
+
+  function confirmBatch(){
+    confirmed = true;
+    roster.forEach(r => { const c = r.el.querySelector(".chip");
+      c.className = "chip a"; c.textContent = "Active"; });
+    $("batch").disabled = true;
+    $("fnote").innerHTML = "Batch confirmed · " + roster.length +
+      " accounts activated. Anything odd can still be downgraded.";
+    if($("s2").classList.contains("on")) go("s3");
   }
+
+  function reset(){ location.reload(); }
+  paint();
 </script>
 </body>
 </html>
